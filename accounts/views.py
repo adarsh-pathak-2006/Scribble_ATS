@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Profile
 from .serializers import RegisterSerializer, ProfileSerializer, OTPSerializer, PasswordSerializer
-from config.cache_keys import session_cachekey, otp_cachekey
+from config.cache_keys import session_cachekey, otp_cachekey, profile_cache_key
 from django.core.cache import cache
 from django.utils.crypto import get_random_string
 
@@ -59,5 +59,24 @@ class PasswordSetAPI(APIView):
             return Response({'message':'registration successfull'}, status=201)
         return Response(serial.errors, status=400)
 
+class MyProfileAPI(APIView):
+    def get(self, request):
+        cached_data=cache.get(profile_cache_key(userid=request.user.id))
+        if cached_data:
+            return Response(cached_data, status=200)
+        data=get_object_or_404(Profile, user=request.user)
+        serial=ProfileSerializer(data)
+        cache.set(profile_cache_key(userid=request.user.id), serial.data, timeout=10000)
+        return Response(serial.data, status=200)
 
+    def put(self, request):
+        instance=get_object_or_404(Profile, user=request.user)
+        serial=ProfileSerializer(instance, data=request.data, partial=True)
+        if serial.is_valid():
+            serial.save()
+            return Response(serial.data, status=200)
+        return Response(serial.errors, status=400)
 
+    
+
+        
