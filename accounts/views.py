@@ -13,7 +13,7 @@ from config.throttling import OTPGenerationThrottle, OTPVerificationThrottle, Ge
 
 class RegisterAPI(APIView):
     permission_classes=[AllowAny]
-    throttle_classes=[GeneralThrottle]
+    throttle_classes=[OTPGenerationThrottle]
     def post(self, request):
         serial=RegisterSerializer(data=request.data)
         if serial.is_valid():
