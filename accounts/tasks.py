@@ -12,6 +12,6 @@ def otpcreationtask(id):
     response=requests.post(url=settings.OTP_URL, json={'email':sess_data.get("email")})
     response.raise_for_status()
     data = response.json()
-    generated_otp = data.get("otp")
-    cache.set(otp_cachekey(sessionid=id, email=sess_data.get("email")), str(generated_otp), timeout=3000)
-    return f"otp sent to the {sess_data.get('email')}"
+    generated_otp = str(data["data"]["otp"])
+    cache.set(otp_cachekey(sessionid=id, email=sess_data.get("email")), generated_otp, timeout=3000)
+    return f"otp sent to the {sess_data.get('email')} otp:{generated_otp}"

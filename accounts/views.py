@@ -14,7 +14,7 @@ from .tasks import otpcreationtask
 
 class RegisterAPI(APIView):
     permission_classes=[AllowAny]
-    throttle_classes=[OTPGenerationThrottle]
+    # throttle_classes=[OTPGenerationThrottle]
     def post(self, request):
         serial=RegisterSerializer(data=request.data)
         if serial.is_valid():
@@ -31,7 +31,7 @@ class RegisterAPI(APIView):
 
 class OTPVerificationAPI(APIView):
     permission_classes=[AllowAny]
-    throttle_classes=[OTPVerificationThrottle]
+    # throttle_classes=[OTPVerificationThrottle]
     def post(self, request, sessid):
         sess_data=cache.get(session_cachekey(sessionid=sessid))
         if not sess_data:
@@ -44,10 +44,12 @@ class OTPVerificationAPI(APIView):
         serial=OTPSerializer(data=request.data)
         if serial.is_valid():
             entered_otp=serial.validated_data['otp']
+            print("Cached OTP:", repr(gen_otp), type(gen_otp))
+            print("Entered OTP:", repr(entered_otp), type(entered_otp))
             if gen_otp != entered_otp:
                 return Response({'message':'wrong otp entered try again'}, status=400)
-            abc=sess_data['verified']=True
-            cache.set(session_cachekey(sessionid=sessid), abc, timeout=3000)
+            sess_data['verified']=True
+            cache.set(session_cachekey(sessionid=sessid), sess_data, timeout=3000)
             cache.delete(otp_cachekey(sessionid=sessid, email=sess_data['email']))
             return Response({"message":"otp verified successfully set password now"}, status=201)
         return Response(serial.errors, status=400)
