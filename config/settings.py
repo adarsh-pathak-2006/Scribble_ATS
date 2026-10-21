@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+
+load_dotenv(BASE_DIR / ".env")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,8 +31,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-OTP_SERVICE_IP=""
-OTP_REFERENCEID=""
+OTP_SERVICE_IP=os.getenv("OTP_SERVICE_IP")
+OTP_REFERENCEID=os.getenv("OTP_REFERENCEID")
 OTP_URL=f"{OTP_SERVICE_IP}/{OTP_REFERENCEID}"
 
 # Application definition
