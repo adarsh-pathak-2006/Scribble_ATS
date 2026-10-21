@@ -8,8 +8,12 @@ from .serializers import RegisterSerializer, ProfileSerializer, OTPSerializer, P
 from config.cache_keys import session_cachekey, otp_cachekey, profile_cache_key
 from django.core.cache import cache
 from django.utils.crypto import get_random_string
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from config.throttling import OTPGenerationThrottle, OTPVerificationThrottle, GeneralThrottle
 
 class RegisterAPI(APIView):
+    permission_classes=[AllowAny]
+    throttle_classes=[GeneralThrottle]
     def post(self, request):
         serial=RegisterSerializer(data=request.data)
         if serial.is_valid():
@@ -24,6 +28,8 @@ class RegisterAPI(APIView):
         return Response(serial.errors, status=400)
 
 class OTPVerificationAPI(APIView):
+    permission_classes=[AllowAny]
+    throttle_classes=[OTPVerificationThrottle]
     def post(self, request, sessid):
         sess_data=cache.get(session_cachekey(sessionid=sessid))
         if not sess_data:
@@ -45,6 +51,8 @@ class OTPVerificationAPI(APIView):
         return Response(serial.errors, status=400)
 
 class PasswordSetAPI(APIView):
+    permission_classes=[AllowAny]
+    throttle_classes=[GeneralThrottle]
     def post(self, request, sessid):
         sess_data=cache.get(session_cachekey(sessionid=sessid))
         if not sess_data:
@@ -60,6 +68,8 @@ class PasswordSetAPI(APIView):
         return Response(serial.errors, status=400)
 
 class MyProfileAPI(APIView):
+    permission_classes=[IsAuthenticated]
+    throttle_classes=[GeneralThrottle]
     def get(self, request):
         cached_data=cache.get(profile_cache_key(userid=request.user.id))
         if cached_data:
