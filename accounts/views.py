@@ -10,6 +10,7 @@ from django.core.cache import cache
 from django.utils.crypto import get_random_string
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from config.throttling import OTPGenerationThrottle, OTPVerificationThrottle, GeneralThrottle
+from .tasks import otpcreationtask
 
 class RegisterAPI(APIView):
     permission_classes=[AllowAny]
@@ -24,6 +25,7 @@ class RegisterAPI(APIView):
                 return Response({'message':'username or email already exists'}, status=400)
             sessid=get_random_string(length=10)
             cache.set(session_cachekey(sessionid=sessid), {'username':username, 'email':email, 'verified':False}, timeout=3000)
+            otpcreationtask.delay(id=sessid)
             return Response({'message':'otp generated', 'session_id':sessid}, status=201)
         return Response(serial.errors, status=400)
 

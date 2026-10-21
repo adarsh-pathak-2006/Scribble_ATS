@@ -7,7 +7,11 @@ from django.conf import settings
 @shared_task
 def otpcreationtask(id):
     sess_data=cache.get(session_cachekey(sessionid=id))
+    if not sess_data:
+        return "Registration session expired"
     response=requests.post(url=settings.OTP_URL, json={'email':sess_data.get("email")})
-    generated_otp=response.get("otp")
+    response.raise_for_status()
+    data = response.json()
+    generated_otp = data.get("otp")
     cache.set(otp_cachekey(sessionid=id, email=sess_data.get("email")), generated_otp, timeout=3000)
-    return f"otp sent to the {sess_data.get("email")}"
+    return f"otp sent to the {sess_data.get('email')}"
