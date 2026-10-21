@@ -27,6 +27,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+OTP_SERVICE_IP=""
+OTP_REFERENCEID=""
+OTP_URL=f"{OTP_SERVICE_IP}/{OTP_REFERENCEID}"
 
 # Application definition
 
