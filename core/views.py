@@ -7,8 +7,12 @@ from django.core.cache import cache
 from config.cache_keys import resume_list_cachekey, resume_scans_list_cache_key, resume_scans_detail_cache_key, created_resume_cache_key, created_resume_detail_cache_key
 from .tasks import processresumepdftotext, atscorecalculationtask, atsfriendlyresumecreationtask
 from config.pagination import GeneralPagination, CreatedResumePagination
+from config.throttling import GeneralThrottle, ResumeCreateThrottle, ResumeScanThrottle
+from rest_framework.permissions import IsAuthenticated
 
 class ResumeListAPI(APIView):
+    throttle_classes=[GeneralThrottle]
+    permission_classes=[IsAuthenticated]
     def get(self, request):
         cached_data=cache.get(resume_list_cachekey(userid=request.user.id))
         if cached_data:
@@ -28,6 +32,11 @@ class ResumeListAPI(APIView):
         
 
 class ResumeScanAPI(APIView):
+    def get_throttles(self):
+        if self.request.method=='POST':
+            return [ResumeScanThrottle()]
+        return [GeneralThrottle()]
+    permission_classes=[IsAuthenticated]
     def get(self, request, resumeslug):
         pageno=request.query_params.get("page", "1")
         cached_data=cache.get(resume_scans_list_cache_key(pageno=pageno, resumeslug=resumeslug))
@@ -52,6 +61,8 @@ class ResumeScanAPI(APIView):
         return Response(serial.errors, status=400)
 
 class ResumeScanDetailAPI(APIView):
+    throttle_classes=[GeneralThrottle]
+    permission_classes=[IsAuthenticated]
     def get(self, request, resumeslug, scanslug):
         cached_data=cache.get(resume_scans_detail_cache_key(resumeslug=resumeslug, scanslug=scanslug))
         if cached_data:
@@ -62,6 +73,8 @@ class ResumeScanDetailAPI(APIView):
         return Response(serial.data, status=200)
 
 class CreatedResumeListAPI(APIView):
+    throttle_classes=[GeneralThrottle]
+    permission_classes=[IsAuthenticated]
     def get(self, request):
         pageno=request.query_params.get("page", "1")
         cached_data=cache.get(created_resume_cache_key(pageno=pageno, userid=request.user.id))
@@ -75,6 +88,8 @@ class CreatedResumeListAPI(APIView):
         return Response(response, status=200)
 
 class CreatedResumeDetailAPI(APIView):
+    throttle_classes=[GeneralThrottle]
+    permission_classes=[IsAuthenticated]
     def get(self, request, slug):
         cached_data=cache.get(created_resume_detail_cache_key(userid=request.user.id, slug=slug))
         if cached_data:
@@ -85,6 +100,8 @@ class CreatedResumeDetailAPI(APIView):
         return Response(serial.data, status=200)
 
 class ATSResumeCreationAPI(APIView):
+    throttle_classes=[ResumeCreateThrottle]
+    permission_classes=[IsAuthenticated]
     def post(self, request, scanslug):
         scan_data=get_object_or_404(ResumeScan.objects.select_related('resume'), resume__profile__user=request.user, slug=scanslug)
         if scan_data.ats_score > 80:

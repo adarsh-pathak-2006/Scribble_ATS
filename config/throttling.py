@@ -8,3 +8,9 @@ class OTPVerificationThrottle(UserRateThrottle):
 
 class GeneralThrottle(UserRateThrottle):
     rate="30/minute"
+
+class ResumeScanThrottle(UserRateThrottle):
+    rate="30/hour"
+
+class ResumeCreateThrottle(UserRateThrottle):
+    rate="25/hour"
