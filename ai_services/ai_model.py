@@ -3,7 +3,7 @@ from google.genai import types
 from django.conf import settings
 from .prompts import ats_friendly_resume_prompt, ats_scoring_prompt
 
-from accounts.serializers import ResumeSerializer
+from .resume_serializer import ResumeSerializer
 
 
 client = genai.Client(api_key=settings.GEMINI_API_KEY)
