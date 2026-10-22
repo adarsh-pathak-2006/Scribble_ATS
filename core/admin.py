@@ -1,3 +1,5 @@
 from django.contrib import admin
+from .models import ResumeScan, ResumeCreation
 
-# Register your models here.
+admin.site.register(ResumeScan)
+admin.site.register(ResumeCreation)
