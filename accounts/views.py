@@ -78,13 +78,13 @@ class MyProfileAPI(APIView):
         cached_data=cache.get(profile_cache_key(userid=request.user.id))
         if cached_data:
             return Response(cached_data, status=200)
-        data=get_object_or_404(Profile, user=request.user)
+        data=get_object_or_404(Profile.objects.select_related('user'), user=request.user)
         serial=ProfileSerializer(data)
         cache.set(profile_cache_key(userid=request.user.id), serial.data, timeout=10000)
         return Response(serial.data, status=200)
 
     def put(self, request):
-        instance=get_object_or_404(Profile, user=request.user)
+        instance=get_object_or_404(Profile.objects.select_related('user'), user=request.user)
         serial=ProfileSerializer(instance, data=request.data, partial=True)
         if serial.is_valid():
             serial.save()

@@ -1,13 +1,20 @@
 from rest_framework.serializers import ModelSerializer
-from .models import ResumeScan, ResumeCreation
+from .models import ResumeScan, ResumeCreation, Resume
 from accounts.serializers import ProfileSerializer
 
+class ResumeSerializer(ModelSerializer):
+    profile=ProfileSerializer(read_only=True)
+    class Meta:
+        model=Resume
+        fields='__all__'
+        read_only_fields=['created_on', 'resumedata']
+
 class ResumeScanSerializer(ModelSerializer):
-    user=ProfileSerializer(read_only=True)
+    resume=ResumeSerializer(read_only=True)
     class Meta:
         model=ResumeScan
         fields='__all__'
-        read_only_fields=['resume_data', 'ats_score', 'created_on']
+        read_only_fields=['ats_score', 'created_on']
 
 
 class ResumeCreationSerializer(ModelSerializer):

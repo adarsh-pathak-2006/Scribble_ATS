@@ -34,6 +34,7 @@ ALLOWED_HOSTS = []
 OTP_SERVICE_IP=os.getenv("OTP_SERVICE_IP")
 OTP_REFERENCEID=os.getenv("OTP_REFERENCEID")
 OTP_URL=f"{OTP_SERVICE_IP}/getotp/{OTP_REFERENCEID}/"
+GEMINI_API_KEY=os.getenv("GEMINI_API_KEY")
 
 # Application definition
 
