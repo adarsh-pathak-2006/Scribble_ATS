@@ -14,7 +14,7 @@ from .tasks import otpcreationtask
 
 class RegisterAPI(APIView):
     permission_classes=[AllowAny]
-    # throttle_classes=[OTPGenerationThrottle]
+    throttle_classes=[OTPGenerationThrottle]
     def post(self, request):
         serial=RegisterSerializer(data=request.data)
         if serial.is_valid():
@@ -31,7 +31,7 @@ class RegisterAPI(APIView):
 
 class OTPVerificationAPI(APIView):
     permission_classes=[AllowAny]
-    # throttle_classes=[OTPVerificationThrottle]
+    throttle_classes=[OTPVerificationThrottle]
     def post(self, request, sessid):
         sess_data=cache.get(session_cachekey(sessionid=sessid))
         if not sess_data:
