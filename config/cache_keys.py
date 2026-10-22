@@ -9,3 +9,6 @@ def profile_cache_key(userid):
 
 def resume_list_cachekey(userid):
     return f"resume_list_cachekey_userid:{userid}"
+
+def resume_scans_list_cache_key(pageno, resumeslug):
+    return f"resume_scan_list_pageno:{pageno}_resumeslug:{resumeslug}"

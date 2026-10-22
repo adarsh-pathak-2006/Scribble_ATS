@@ -1,11 +1,16 @@
 from django.db import models
 from accounts.models import Profile
+from django.utils.crypto import get_random_string
+
+def slug_field_generation():
+    return get_random_string(length=10)
 
 class Resume(models.Model):
     profile=models.ForeignKey(Profile, on_delete=models.CASCADE)
     resumepdf=models.FileField(upload_to='resumes/')
     resumedata=models.TextField(null=True)
     created_on=models.DateTimeField(auto_now_add=True)
+    slug=models.SlugField(default=slug_field_generation, unique=True, editable=False)
 
     def __str__(self):
         return f"resume of {self.user.nickname}"
@@ -16,6 +21,7 @@ class ResumeScan(models.Model):
     job_description=models.TextField()
     ats_score=models.IntegerField(null=True)
     created_on=models.DateTimeField(auto_now_add=True)
+    slug=models.SlugField(default=slug_field_generation, unique=True, editable=False)
 
     def __str__(self):
         return f"resumescan of {self.user.nickname}"
@@ -25,6 +31,7 @@ class ResumeCreation(models.Model):
     scan=models.ForeignKey(ResumeScan, on_delete=models.CASCADE)
     generated_resume=models.TextField(null=True)
     created_on=models.DateTimeField(auto_now_add=True)
+    slug=models.SlugField(default=slug_field_generation, unique=True, editable=False)
 
     def save(self, *args, **kwargs):
         if self.scan.ats_score>=80:

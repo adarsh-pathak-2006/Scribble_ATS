@@ -7,14 +7,14 @@ class ResumeSerializer(ModelSerializer):
     class Meta:
         model=Resume
         fields='__all__'
-        read_only_fields=['created_on', 'resumedata']
+        read_only_fields=['created_on', 'resumedata', 'slug']
 
 class ResumeScanSerializer(ModelSerializer):
     resume=ResumeSerializer(read_only=True)
     class Meta:
         model=ResumeScan
         fields='__all__'
-        read_only_fields=['ats_score', 'created_on']
+        read_only_fields=['ats_score', 'created_on', 'slug']
 
 
 class ResumeCreationSerializer(ModelSerializer):
@@ -22,4 +22,4 @@ class ResumeCreationSerializer(ModelSerializer):
     class Meta:
         model=ResumeCreation
         fields='__all__'
-        read_only_fields=['generated_resume', 'created_on']
+        read_only_fields=['generated_resume', 'created_on', 'slug']
