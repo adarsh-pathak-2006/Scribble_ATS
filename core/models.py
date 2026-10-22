@@ -28,6 +28,7 @@ class ResumeScan(models.Model):
 
 
 class ResumeCreation(models.Model):
+    profile=models.ForeignKey(Profile, on_delete=models.CASCADE)
     scan=models.ForeignKey(ResumeScan, on_delete=models.CASCADE)
     generated_resume=models.TextField(null=True)
     created_on=models.DateTimeField(auto_now_add=True)

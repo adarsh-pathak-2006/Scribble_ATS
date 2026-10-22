@@ -18,6 +18,7 @@ class ResumeScanSerializer(ModelSerializer):
 
 
 class ResumeCreationSerializer(ModelSerializer):
+    profile=ProfileSerializer(read_only=True)
     scan=ResumeScanSerializer(read_only=True)
     class Meta:
         model=ResumeCreation

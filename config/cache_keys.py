@@ -15,3 +15,9 @@ def resume_scans_list_cache_key(pageno, resumeslug):
 
 def resume_scans_detail_cache_key(resumeslug, scanslug):
     return f"resume_scan_detail_cache_key_resumeslug:{resumeslug}_scanslug:{scanslug}"
+
+def created_resume_cache_key(pageno, userid):
+    return f"created_resume_cache_key_pageno:{pageno}_userid:{userid}"
+
+def created_resume_detail_cache_key(userid, slug):
+    return f"created_resume_detail_cache_key_userid:{userid}_slug:{slug}"

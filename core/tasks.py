@@ -1,9 +1,8 @@
 import pymupdf
 from django.shortcuts import get_object_or_404
 from celery import shared_task
-from accounts.models import Profile
-from .models import Resume, ResumeScan
-from ai_services.ai_model import calculate_ats_score
+from .models import Resume, ResumeScan, ResumeCreation
+from ai_services.ai_model import calculate_ats_score, generate_resume
 
 @shared_task
 def processresumepdftotext(userid, resumeid):
@@ -27,3 +26,14 @@ def atscorecalculationtask(jd, resumeslug):
     response=calculate_ats_score(job_description=jd, resume_text=resume_data.resumedata)
     ResumeScan.objects.create(resume=resume_data, job_description=jd, ats_score=response)
     return f"ats score calculated for resumeslug:{resumeslug}"
+
+
+@shared_task
+def atsfriendlyresumecreationtask(scanid):
+    scan_data=get_object_or_404(ResumeScan, id=scanid)
+    resume_text=scan_data.resume.resumedata
+    jd=scan_data.job_description
+    response=generate_resume(resume_text=resume_text, job_description=jd)
+    ResumeCreation.objects.create(scan=scan_data, generated_resume=response)
+    return f"the resume is generated and saved for scanid:{scanid}"
+
