@@ -12,3 +12,6 @@ def resume_list_cachekey(userid):
 
 def resume_scans_list_cache_key(pageno, resumeslug):
     return f"resume_scan_list_pageno:{pageno}_resumeslug:{resumeslug}"
+
+def resume_scans_detail_cache_key(resumeslug, scanslug):
+    return f"resume_scan_detail_cache_key_resumeslug:{resumeslug}_scanslug:{scanslug}"
