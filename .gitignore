@@ -1,3 +1,30 @@
-db.sqlite3
+# Byte-compiled / optimized / DLL files
 __pycache__/
+*.py[cod]
+*$py.class
+
+# Databases
+*.sqlite3
+db.sqlite3
+
+# Local environment and secret files
 .env
+.env.local
+.env.*.local
+
+# Frontend build & dependencies
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.env.local
+frontend/.env.*.local
+
+# Frontend Next.js misc
+frontend/.DS_Store
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
+
+# Allow example configs to be tracked in Git
+!.env.example
+!frontend/.env.example

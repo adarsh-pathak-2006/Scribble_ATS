@@ -171,6 +171,8 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "Asia/Kolkata"
 CELERY_TASK_TRACK_STARTED = True
 CELERY_RESULT_EXPIRES = 3600
+CELERY_TASK_ALWAYS_EAGER = os.getenv("CELERY_TASK_ALWAYS_EAGER", "False").lower() in ("true", "1")
+CELERY_TASK_EAGER_PROPAGATES = True
 
 # SSL support for Upstash Redis (rediss://)
 if REDIS_CELERY_URL.startswith("rediss://"):
