@@ -59,7 +59,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     }
     setLoading(true);
     try {
-      const sessId = await register({
+      const { sessionId: sessId, debugOtp } = await register({
         username,
         email,
         first_name: firstName,
@@ -67,8 +67,13 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         phone_number: phoneNumber,
       });
       setSessionId(sessId);
+      if (debugOtp) {
+        setOtp(debugOtp);
+        showToast(`Verification code: ${debugOtp} (Dev auto-filled)`, 'info');
+      } else {
+        showToast('Verification code generated and sent to email', 'success');
+      }
       setRegStep(2);
-      showToast('Verification code generated and sent to email', 'success');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Registration failed';
       showToast(msg, 'error');

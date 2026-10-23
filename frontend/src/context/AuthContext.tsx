@@ -9,7 +9,7 @@ interface AuthContextType {
   isLoading: boolean;
   profile: Profile | null;
   login: (username: string, password: string) => Promise<void>;
-  register: (payload: { username: string; email: string; first_name?: string; last_name?: string; phone_number?: string }) => Promise<string>;
+  register: (payload: { username: string; email: string; first_name?: string; last_name?: string; phone_number?: string }) => Promise<{ sessionId: string; debugOtp?: string }>;
   verifyOtp: (sessionId: string, otp: string) => Promise<void>;
   setPassword: (sessionId: string, password: string) => Promise<void>;
   logout: () => void;
@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (payload: { username: string; email: string; first_name?: string; last_name?: string; phone_number?: string }) => {
     const res = await api.register(payload);
-    return res.session_id;
+    return { sessionId: res.session_id, debugOtp: res.debug_otp };
   };
 
   const verifyOtp = async (sessionId: string, otp: string) => {

@@ -1,9 +1,138 @@
 /**
  * Browser-side resume downloader supporting PDF Print, Word (.doc), Markdown (.md), and Plain Text (.txt)
+ * Handles both raw markdown/text and structured JSON resume formats seamlessly.
  */
 
 export function sanitizeFilename(name: string): string {
   return name.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase();
+}
+
+/**
+ * Converts structured JSON resume into clean standard ATS Markdown
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function resumeJsonToMarkdown(data: any): string {
+  const parts: string[] = [];
+
+  // Personal Info
+  if (data.personal_info) {
+    const p = data.personal_info;
+    parts.push(`# ${p.name || 'Candidate'}`);
+    const contacts = [
+      p.email,
+      p.phone,
+      p.location,
+      p.linkedin ? `LinkedIn: ${p.linkedin}` : null,
+      p.github ? `GitHub: ${p.github}` : null,
+    ].filter(Boolean);
+    if (contacts.length > 0) {
+      parts.push(contacts.join(' | '));
+    }
+    parts.push('');
+  }
+
+  // Professional Summary
+  if (data.summary) {
+    parts.push('## Professional Summary');
+    parts.push(data.summary);
+    parts.push('');
+  }
+
+  // Technical Skills
+  if (data.skills) {
+    parts.push('## Technical & Core Skills');
+    const s = data.skills;
+    if (Array.isArray(s.programming) && s.programming.length) parts.push(`- **Programming Languages:** ${s.programming.join(', ')}`);
+    if (Array.isArray(s.backend) && s.backend.length) parts.push(`- **Backend & Frameworks:** ${s.backend.join(', ')}`);
+    if (Array.isArray(s.databases) && s.databases.length) parts.push(`- **Databases:** ${s.databases.join(', ')}`);
+    if (Array.isArray(s.tools) && s.tools.length) parts.push(`- **Tools & Cloud:** ${s.tools.join(', ')}`);
+    if (Array.isArray(s.other) && s.other.length) parts.push(`- **Other Competencies:** ${s.other.join(', ')}`);
+    parts.push('');
+  }
+
+  // Professional Experience
+  if (Array.isArray(data.experience) && data.experience.length) {
+    parts.push('## Professional Experience');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const exp of data.experience) {
+      parts.push(`### ${exp.role || 'Role'} — ${exp.company || 'Company'}`);
+      if (exp.start_date || exp.end_date) {
+        parts.push(`*${exp.start_date || ''} - ${exp.end_date || 'Present'}*`);
+      }
+      if (Array.isArray(exp.bullets)) {
+        for (const b of exp.bullets) {
+          parts.push(`- ${b}`);
+        }
+      }
+      parts.push('');
+    }
+  }
+
+  // Projects
+  if (Array.isArray(data.projects) && data.projects.length) {
+    parts.push('## Technical Projects');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const proj of data.projects) {
+      parts.push(`### ${proj.name || 'Project'}${proj.url ? ` (${proj.url})` : ''}`);
+      if (Array.isArray(proj.technologies) && proj.technologies.length) {
+        parts.push(`*Technologies: ${proj.technologies.join(', ')}*`);
+      }
+      if (Array.isArray(proj.bullets)) {
+        for (const b of proj.bullets) {
+          parts.push(`- ${b}`);
+        }
+      }
+      parts.push('');
+    }
+  }
+
+  // Education
+  if (Array.isArray(data.education) && data.education.length) {
+    parts.push('## Education');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const edu of data.education) {
+      parts.push(`### ${edu.degree || 'Degree'} — ${edu.institution || 'Institution'}`);
+      if (edu.start_date || edu.end_date) {
+        parts.push(`*${edu.start_date || ''} - ${edu.end_date || ''}*`);
+      }
+      if (Array.isArray(edu.details)) {
+        for (const d of edu.details) {
+          parts.push(`- ${d}`);
+        }
+      }
+      parts.push('');
+    }
+  }
+
+  // Certifications
+  if (Array.isArray(data.certifications) && data.certifications.length) {
+    parts.push('## Certifications & Achievements');
+    for (const cert of data.certifications) {
+      parts.push(`- ${cert}`);
+    }
+    parts.push('');
+  }
+
+  return parts.join('\n');
+}
+
+/**
+ * Standardizes content: formats structured JSON to ATS Markdown if needed
+ */
+export function formatResumeContent(content: string | null): string {
+  if (!content) return '';
+  const trimmed = content.trim();
+  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (parsed.personal_info || parsed.skills || parsed.experience) {
+        return resumeJsonToMarkdown(parsed);
+      }
+    } catch {
+      // Fall through to raw text
+    }
+  }
+  return content;
 }
 
 /**
@@ -24,7 +153,8 @@ export function downloadBlob(content: string, filename: string, mimeType: string
 /**
  * Download as Markdown (.md)
  */
-export function downloadAsMarkdown(content: string, baseName: string) {
+export function downloadAsMarkdown(rawContent: string, baseName: string) {
+  const content = formatResumeContent(rawContent);
   const filename = `${sanitizeFilename(baseName)}_ats_resume.md`;
   downloadBlob(content, filename, 'text/markdown');
 }
@@ -32,8 +162,8 @@ export function downloadAsMarkdown(content: string, baseName: string) {
 /**
  * Download as Plain Text (.txt)
  */
-export function downloadAsText(content: string, baseName: string) {
-  // Strip common markdown bold/italic hashes for a clean plain-text ATS format
+export function downloadAsText(rawContent: string, baseName: string) {
+  const content = formatResumeContent(rawContent);
   const plainText = content
     .replace(/^#+\s+/gm, '')
     .replace(/\*\*(.*?)\*\*/g, '$1')
@@ -47,7 +177,8 @@ export function downloadAsText(content: string, baseName: string) {
 /**
  * Download as Microsoft Word compatible (.doc) document
  */
-export function downloadAsWordDoc(content: string, baseName: string) {
+export function downloadAsWordDoc(rawContent: string, baseName: string) {
+  const content = formatResumeContent(rawContent);
   const htmlContent = `
 <!DOCTYPE html>
 <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
@@ -83,7 +214,8 @@ export function downloadAsWordDoc(content: string, baseName: string) {
 /**
  * Trigger clean browser-side print to PDF dialog
  */
-export function printResume(content: string, title: string) {
+export function printResume(rawContent: string, title: string) {
+  const content = formatResumeContent(rawContent);
   const printWindow = window.open('', '_blank');
   if (!printWindow) {
     alert('Please allow popups to open the print dialog.');
@@ -180,7 +312,8 @@ export function printResume(content: string, title: string) {
 /**
  * Basic markdown to HTML converter for ATS layout rendering
  */
-export function markdownToBasicHtml(md: string): string {
+export function markdownToBasicHtml(rawMd: string): string {
+  const md = formatResumeContent(rawMd);
   if (!md) return '';
 
   const lines = md.split('\n');

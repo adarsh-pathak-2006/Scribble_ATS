@@ -7,7 +7,8 @@ import {
   downloadAsText,
   downloadAsWordDoc,
   printResume,
-  markdownToBasicHtml
+  markdownToBasicHtml,
+  formatResumeContent,
 } from '@/lib/downloadResume';
 import {
   X,
@@ -47,7 +48,7 @@ export function ResumeViewerModal({
 
   const handleCopy = () => {
     if (!content) return;
-    navigator.clipboard.writeText(content);
+    navigator.clipboard.writeText(formatResumeContent(content));
     setCopied(true);
     showToast('Resume content copied to clipboard!', 'success');
     setTimeout(() => setCopied(false), 2000);
@@ -290,7 +291,7 @@ export function ResumeViewerModal({
               whiteSpace: 'pre-wrap',
             }}
           >
-            {content || 'No text extracted yet or content is still being processed.'}
+            {formatResumeContent(content) || 'No text extracted yet or content is still being processed.'}
           </div>
         )}
 

@@ -120,7 +120,7 @@ class APIClient {
     first_name?: string;
     last_name?: string;
     phone_number?: string;
-  }): Promise<{ message: string; session_id: string }> {
+  }): Promise<{ message: string; session_id: string; debug_otp?: string }> {
     return this.request('/accounts/register/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
