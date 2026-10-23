@@ -38,10 +38,9 @@ class ResumeCreation(models.Model):
 
     def save(self, *args, **kwargs):
         if self.scan.ats_score is None:
-            raise TypeError("the ats score is not generated yet")
-        else: 
-            if self.scan.ats_score>=80:
-                raise ValueError("the ATS Score is already above 80. No new resume creation required")
+            raise ValueError("The ATS score has not been generated yet.")
+        if self.scan.ats_score >= 80:
+            raise ValueError("The ATS Score is already above 80. No new resume creation required.")
         return super().save(*args, **kwargs)
 
     def __str__(self):

@@ -99,9 +99,12 @@ class ResumeScanAPI(APIView):
                     {'message': 'The resume PDF is still being processed. Please wait a moment and try again.'},
                     status=status.HTTP_409_CONFLICT
                 )
-            atscorecalculationtask.delay(jd=jd, resumeslug=resume_data.slug)
+            task = atscorecalculationtask.delay(jd=jd, resumeslug=resume_data.slug)
             return Response(
-                {'message': 'ATS score calculation started. The result will be available shortly.'},
+                {
+                    'message': 'ATS score calculation started. The result will be available shortly.',
+                    'task_id': task.id
+                },
                 status=status.HTTP_202_ACCEPTED
             )
         return Response(serial.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -192,9 +195,12 @@ class ATSResumeCreationAPI(APIView):
                 {'message': 'The ATS score is already 80 or above. No new resume creation required.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        atsfriendlyresumecreationtask.delay(scanid=scan_data.id, userid=request.user.id)
+        task = atsfriendlyresumecreationtask.delay(scanid=scan_data.id, userid=request.user.id)
         return Response(
-            {'message': 'The resume generation task has started and will be saved shortly.'},
+            {
+                'message': 'The resume generation task has started and will be saved shortly.',
+                'task_id': task.id
+            },
             status=status.HTTP_202_ACCEPTED
         )
 

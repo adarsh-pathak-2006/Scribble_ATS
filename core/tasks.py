@@ -55,9 +55,9 @@ def atscorecalculationtask(self, jd, resumeslug):
     retry_kwargs={'max_retries': 3},
     ignore_result=True
 )
-def atsfriendlyresumecreationtask(self, scanid, userid):
+def atsfriendlyresumecreationtask(self, scanid, userid=None):
     try:
-        scan_data = ResumeScan.objects.select_related('resume').get(id=scanid)
+        scan_data = ResumeScan.objects.select_related('resume__profile').get(id=scanid)
     except ResumeScan.DoesNotExist:
         return f"ResumeScan id:{scanid} does not exist"
 
@@ -67,11 +67,7 @@ def atsfriendlyresumecreationtask(self, scanid, userid):
 
     jd = scan_data.job_description
     response = generate_resume(resume_text=resume_text, job_description=jd)
-
-    try:
-        profile_data = Profile.objects.select_related('user').get(user__id=userid)
-    except Profile.DoesNotExist:
-        profile_data = Profile.objects.create(user_id=userid)
+    profile_data = scan_data.resume.profile
 
     generated_text = json.dumps(response) if isinstance(response, (dict, list)) else str(response)
     ResumeCreation.objects.create(scan=scan_data, generated_resume=generated_text, profile=profile_data)
