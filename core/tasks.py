@@ -1,42 +1,78 @@
 import json
 import pymupdf
-from django.shortcuts import get_object_or_404
 from celery import shared_task
 from .models import Resume, ResumeScan, ResumeCreation
 from accounts.models import Profile
 from ai_services.ai_model import calculate_ats_score, generate_resume
 
-@shared_task
+MAX_PDF_PAGES = 15
+
+@shared_task(ignore_result=True)
 def processresumepdftotext(userid, resumeid):
-    resume=get_object_or_404(Resume.objects.select_related('profile'), profile__user__id=userid, id=resumeid)
+    try:
+        resume = Resume.objects.select_related('profile').get(profile__user__id=userid, id=resumeid)
+    except Resume.DoesNotExist:
+        return f"Resume id:{resumeid} does not exist"
+
     with resume.resumepdf.open("rb") as pdf_file:
         pdf_bytes = pdf_file.read()
 
     with pymupdf.open(stream=pdf_bytes, filetype="pdf") as pdf:
+        num_pages = min(len(pdf), MAX_PDF_PAGES)
         resume_text = "\n".join(
-            page.get_text(sort=True)
-            for page in pdf
+            pdf[page_idx].get_text(sort=True)
+            for page_idx in range(num_pages)
         )
 
-    resume.resumedata=resume_text
-    resume.save()
+    resume.resumedata = resume_text
+    resume.save(update_fields=['resumedata'])
     return "resume text created and saved in the db"
 
-@shared_task
-def atscorecalculationtask(jd, resumeslug):
-    resume_data=get_object_or_404(Resume.objects.select_related('profile'), slug=resumeslug)
-    response=calculate_ats_score(job_description=jd, resume_text=resume_data.resumedata)
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_kwargs={'max_retries': 3},
+    ignore_result=True
+)
+def atscorecalculationtask(self, jd, resumeslug):
+    try:
+        resume_data = Resume.objects.select_related('profile').get(slug=resumeslug)
+    except Resume.DoesNotExist:
+        return f"Resume slug:{resumeslug} does not exist"
+
+    if not resume_data.resumedata:
+        raise ValueError(f"Resume text is empty or not yet parsed for {resumeslug}")
+
+    response = calculate_ats_score(job_description=jd, resume_text=resume_data.resumedata)
     ResumeScan.objects.create(resume=resume_data, job_description=jd, ats_score=response)
     return f"ats score calculated for resumeslug:{resumeslug}"
 
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_kwargs={'max_retries': 3},
+    ignore_result=True
+)
+def atsfriendlyresumecreationtask(self, scanid, userid):
+    try:
+        scan_data = ResumeScan.objects.select_related('resume').get(id=scanid)
+    except ResumeScan.DoesNotExist:
+        return f"ResumeScan id:{scanid} does not exist"
 
-@shared_task
-def atsfriendlyresumecreationtask(scanid, userid):
-    scan_data=get_object_or_404(ResumeScan, id=scanid)
-    resume_text=scan_data.resume.resumedata
-    jd=scan_data.job_description
-    response=generate_resume(resume_text=resume_text, job_description=jd)
-    profile_data=get_object_or_404(Profile.objects.select_related('user'), user__id=userid)
+    resume_text = scan_data.resume.resumedata
+    if not resume_text:
+        raise ValueError(f"Resume text is missing for scan {scanid}")
+
+    jd = scan_data.job_description
+    response = generate_resume(resume_text=resume_text, job_description=jd)
+
+    try:
+        profile_data = Profile.objects.select_related('user').get(user__id=userid)
+    except Profile.DoesNotExist:
+        profile_data = Profile.objects.create(user_id=userid)
+
     generated_text = json.dumps(response) if isinstance(response, (dict, list)) else str(response)
     ResumeCreation.objects.create(scan=scan_data, generated_resume=generated_text, profile=profile_data)
     return f"the resume is generated and saved for scanid:{scanid}"

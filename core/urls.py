@@ -4,8 +4,11 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
+    path('', ResumeListAPI.as_view()),
     path('resume/', ResumeListAPI.as_view()),
+    path('<slug:resumeslug>/scan/', ResumeScanAPI.as_view()),
     path('resume/<slug:resumeslug>/scan/', ResumeScanAPI.as_view()),
+    path('<slug:resumeslug>/scan/<slug:scanslug>/', ResumeScanDetailAPI.as_view()),
     path('resume/<slug:resumeslug>/scan/<slug:scanslug>/', ResumeScanDetailAPI.as_view()),
     path('created/', CreatedResumeListAPI.as_view()),
     path('created/<slug:slug>/', CreatedResumeDetailAPI.as_view()),

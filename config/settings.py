@@ -24,12 +24,12 @@ load_dotenv(BASE_DIR / ".env")
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-gw*@%^evwg=6cphxpypk(v1dgdoxupy!@iru=wh95qfiv)pfi5'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-gw*@%^evwg=6cphxpypk(v1dgdoxupy!@iru=wh95qfiv)pfi5')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '*').split(',') if h.strip()] if not DEBUG else ['*']
 
 OTP_SERVICE_IP=os.getenv("OTP_SERVICE_IP")
 OTP_REFERENCEID=os.getenv("OTP_REFERENCEID")
@@ -136,6 +136,7 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "Asia/Kolkata"
 CELERY_TASK_TRACK_STARTED = True
+CELERY_RESULT_EXPIRES = 3600
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/

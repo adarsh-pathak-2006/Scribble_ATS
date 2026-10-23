@@ -1,16 +1,21 @@
 from rest_framework.throttling import UserRateThrottle
 
 class OTPGenerationThrottle(UserRateThrottle):
-    rate="10/hour"
+    scope = "otp_generation"
+    rate = "10/hour"
 
 class OTPVerificationThrottle(UserRateThrottle):
-    rate="15/hour"
+    scope = "otp_verification"
+    rate = "15/hour"
 
 class GeneralThrottle(UserRateThrottle):
-    rate="30/minute"
+    scope = "general"
+    rate = "30/minute"
 
 class ResumeScanThrottle(UserRateThrottle):
-    rate="30/hour"
+    scope = "resume_scan"
+    rate = "30/hour"
 
 class ResumeCreateThrottle(UserRateThrottle):
-    rate="25/hour"
+    scope = "resume_create"
+    rate = "25/hour"
