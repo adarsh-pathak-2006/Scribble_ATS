@@ -6,7 +6,11 @@ from .prompts import ats_friendly_resume_prompt, ats_scoring_prompt
 from .resume_serializer import ResumeSerializer
 
 
-client = genai.Client(api_key=settings.GEMINI_API_KEY)
+def get_client():
+    api_key = getattr(settings, "GEMINI_API_KEY", None)
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY is not configured or is empty in settings.")
+    return genai.Client(api_key=api_key)
 
 
 RESUME_SCHEMA = {
@@ -132,6 +136,7 @@ RESUME_SCHEMA = {
 
 
 def generate_resume(resume_text, job_description):
+    client = get_client()
     response = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=ats_friendly_resume_prompt(jd=job_description, resumetxt=resume_text),
@@ -156,6 +161,7 @@ def generate_resume(resume_text, job_description):
 
 
 def calculate_ats_score(resume_text, job_description):
+    client = get_client()
     response = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=ats_scoring_prompt(jd=job_description, resumetxt=resume_text),
@@ -165,7 +171,14 @@ def calculate_ats_score(resume_text, job_description):
         ),
     )
 
-    score = int(response.text.strip())
+    if response.text is None:
+        raise ValueError("Gemini returned no response.")
+
+    import re
+    match = re.search(r'\b\d{1,3}\b', response.text)
+    if not match:
+        raise ValueError(f"Could not parse ATS score from response: {response.text}")
+    score = int(match.group())
 
     if not 0 <= score <= 100:
         raise ValueError("ATS score must be between 0 and 100")

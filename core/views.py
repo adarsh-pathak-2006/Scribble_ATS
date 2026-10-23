@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from .models import ResumeScan, ResumeCreation, Resume
+from accounts.models import Profile
 from .serializers import ResumeScanSerializer, ResumeCreationSerializer, ResumeSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -23,10 +24,10 @@ class ResumeListAPI(APIView):
         return Response(serial.data, status= 200)
 
     def post(self, request):
-        serial=ResumeScanSerializer(data=request.data)
+        serial=ResumeSerializer(data=request.data)
         if serial.is_valid():
-            resume=serial.save()
-            processresumepdftotext.delay(userid=request.user.id, resumeid=resume.id)
+            profile, _ = Profile.objects.get_or_create(user=request.user)
+            serial.save(profile=profile)
             return Response(serial.data, status=201)
         return Response(serial.errors, status=400)
         
@@ -46,7 +47,7 @@ class ResumeScanAPI(APIView):
         queryset=paginator.paginate_queryset(ResumeScan.objects.select_related('resume__profile__user').filter(resume__slug=resumeslug, resume__profile__user=request.user).order_by("-created_on"), view=self, request=request)
         serial=ResumeScanSerializer(queryset, many=True)
         response=paginator.get_paginated_response(serial.data)
-        cache.set(resume_scans_list_cache_key(pageno=pageno, resumeslug=resumeslug), response, timeout=8000)
+        cache.set(resume_scans_list_cache_key(pageno=pageno, resumeslug=resumeslug), response.data, timeout=8000)
         return response
 
     def post(self, request, resumeslug):
@@ -84,8 +85,8 @@ class CreatedResumeListAPI(APIView):
         queryset=paginator.paginate_queryset(ResumeCreation.objects.select_related('profile__user', 'scan').filter(profile__user=request.user).order_by("-created_on"), view=self, request=request)
         serial=ResumeCreationSerializer(queryset, many=True)
         response=paginator.get_paginated_response(serial.data)
-        cache.set(created_resume_cache_key(pageno=pageno, userid=request.user.id), response, timeout=3000)
-        return Response(response, status=200)
+        cache.set(created_resume_cache_key(pageno=pageno, userid=request.user.id), response.data, timeout=3000)
+        return response
 
 class CreatedResumeDetailAPI(APIView):
     throttle_classes=[GeneralThrottle]
@@ -95,7 +96,7 @@ class CreatedResumeDetailAPI(APIView):
         if cached_data:
             return Response(cached_data, status=200)
         data=get_object_or_404(ResumeCreation.objects.select_related('profile__user', 'scan'), profile__user=request.user, slug=slug)
-        serial=ResumeCreation(data)
+        serial=ResumeCreationSerializer(data)
         cache.set(created_resume_detail_cache_key(userid=request.user.id, slug=slug), serial.data, timeout=3000)
         return Response(serial.data, status=200)
 
@@ -104,9 +105,11 @@ class ATSResumeCreationAPI(APIView):
     permission_classes=[IsAuthenticated]
     def post(self, request, scanslug):
         scan_data=get_object_or_404(ResumeScan.objects.select_related('resume__profile__user'), resume__profile__user=request.user, slug=scanslug)
-        if scan_data.ats_score > 80:
+        if scan_data.ats_score is None:
+            return Response({'message':'the ats score is not calculated yet. please wait.'}, status=400)
+        if scan_data.ats_score >= 80:
             return Response({'message':'the ats score is already good..no need to change anything'}, status=400)
-        atsfriendlyresumecreationtask.delay(scanid=scan_data.id)
+        atsfriendlyresumecreationtask.delay(scanid=scan_data.id, userid=request.user.id)
         return Response({'message':'the resume will be created and saved shortly'})
 
 

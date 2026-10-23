@@ -1,13 +1,15 @@
+import json
 import pymupdf
 from django.shortcuts import get_object_or_404
 from celery import shared_task
 from .models import Resume, ResumeScan, ResumeCreation
+from accounts.models import Profile
 from ai_services.ai_model import calculate_ats_score, generate_resume
 
 @shared_task
 def processresumepdftotext(userid, resumeid):
     resume=get_object_or_404(Resume.objects.select_related('profile'), profile__user__id=userid, id=resumeid)
-    with resume.file.open("rb") as pdf_file:
+    with resume.resumepdf.open("rb") as pdf_file:
         pdf_bytes = pdf_file.read()
 
     with pymupdf.open(stream=pdf_bytes, filetype="pdf") as pdf:
@@ -29,11 +31,13 @@ def atscorecalculationtask(jd, resumeslug):
 
 
 @shared_task
-def atsfriendlyresumecreationtask(scanid):
+def atsfriendlyresumecreationtask(scanid, userid):
     scan_data=get_object_or_404(ResumeScan, id=scanid)
     resume_text=scan_data.resume.resumedata
     jd=scan_data.job_description
     response=generate_resume(resume_text=resume_text, job_description=jd)
-    ResumeCreation.objects.create(scan=scan_data, generated_resume=response)
+    profile_data=get_object_or_404(Profile.objects.select_related('user'), user__id=userid)
+    generated_text = json.dumps(response) if isinstance(response, (dict, list)) else str(response)
+    ResumeCreation.objects.create(scan=scan_data, generated_resume=generated_text, profile=profile_data)
     return f"the resume is generated and saved for scanid:{scanid}"
 

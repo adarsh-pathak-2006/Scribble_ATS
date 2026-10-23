@@ -13,7 +13,8 @@ class Resume(models.Model):
     slug=models.SlugField(default=slug_field_generation, unique=True, editable=False)
 
     def __str__(self):
-        return f"resume of {self.user.nickname}"
+        nickname = self.profile.nickname or self.profile.user.username
+        return f"resume of {nickname}"
 
 
 class ResumeScan(models.Model):
@@ -24,7 +25,8 @@ class ResumeScan(models.Model):
     slug=models.SlugField(default=slug_field_generation, unique=True, editable=False)
 
     def __str__(self):
-        return f"resumescan of {self.user.nickname}"
+        nickname = self.resume.profile.nickname or self.resume.profile.user.username
+        return f"resumescan of {nickname}"
 
 
 class ResumeCreation(models.Model):
@@ -35,9 +37,13 @@ class ResumeCreation(models.Model):
     slug=models.SlugField(default=slug_field_generation, unique=True, editable=False)
 
     def save(self, *args, **kwargs):
-        if self.scan.ats_score>=80:
-            raise ValueError("the ATS Score is already above 80. No new resume creation required")
+        if self.scan.ats_score is None:
+            raise TypeError("the ats score is not generated yet")
+        else: 
+            if self.scan.ats_score>=80:
+                raise ValueError("the ATS Score is already above 80. No new resume creation required")
         return super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"generated resume for {self.scan.user.nickname}"
+        nickname = self.profile.nickname or self.profile.user.username
+        return f"generated resume for {nickname}"
