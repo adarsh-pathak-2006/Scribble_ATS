@@ -92,17 +92,22 @@ WSGI_APPLICATION = 'config.wsgi.application'
 import dj_database_url
 import ssl
 
-DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("NEON_DATABASE_URL")
+DATABASE_URL = (os.getenv("DATABASE_URL") or os.getenv("NEON_DATABASE_URL") or "").strip()
 
+db_config = None
 if DATABASE_URL:
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
+    try:
+        db_config = dj_database_url.parse(
+            DATABASE_URL,
             conn_max_age=600,
             conn_health_checks=True,
             ssl_require=True,
         )
-    }
+    except Exception:
+        db_config = None
+
+if db_config and db_config.get("ENGINE"):
+    DATABASES = {'default': db_config}
 else:
     # Fallback: Local SQLite
     DATABASES = {
@@ -143,7 +148,7 @@ SIMPLE_JWT = {
 }
 
 # Redis Configuration: Upstash (Primary) with Memurai/Local (Fallback)
-UPSTASH_REDIS_URL = os.getenv("UPSTASH_REDIS_URL") or os.getenv("REDIS_URL")
+UPSTASH_REDIS_URL = (os.getenv("UPSTASH_REDIS_URL") or os.getenv("REDIS_URL") or "").strip()
 MEMURAI_CACHE_URL = os.getenv("MEMURAI_CACHE_URL", "redis://127.0.0.1:6379/5")
 MEMURAI_CELERY_URL = os.getenv("MEMURAI_CELERY_URL", "redis://127.0.0.1:6379/6")
 
