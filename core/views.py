@@ -99,13 +99,22 @@ class ResumeScanAPI(APIView):
                     {'message': 'The resume PDF is still being processed. Please wait a moment and try again.'},
                     status=status.HTTP_409_CONFLICT
                 )
-            task = atscorecalculationtask.delay(jd=jd, resumeslug=resume_data.slug)
+            scan = ResumeScan.objects.create(resume=resume_data, job_description=jd, ats_score=None)
+            task = atscorecalculationtask.delay(scanid=scan.id)
             return Response(
                 {
                     'message': 'ATS score calculation started. The result will be available shortly.',
-                    'task_id': task.id
+                    'task_id': task.id,
+                    'scan': {
+                        'id': scan.id,
+                        'slug': scan.slug,
+                        'resume_slug': resume_data.slug,
+                        'job_description': scan.job_description,
+                        'ats_score': None,
+                        'created_on': scan.created_on
+                    }
                 },
-                status=status.HTTP_202_ACCEPTED
+                status=status.HTTP_201_CREATED
             )
         return Response(serial.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -126,7 +135,8 @@ class ResumeScanDetailAPI(APIView):
             slug=scanslug
         )
         serial = ResumeScanSerializer(data, context={'request': request})
-        cache.set(cache_key, serial.data, timeout=8000)
+        if data.ats_score is not None:
+            cache.set(cache_key, serial.data, timeout=8000)
         return Response(serial.data, status=status.HTTP_200_OK)
 
 
@@ -171,7 +181,8 @@ class CreatedResumeDetailAPI(APIView):
             slug=slug
         )
         serial = ResumeCreationSerializer(data, context={'request': request})
-        cache.set(cache_key, serial.data, timeout=3000)
+        if data.generated_resume:
+            cache.set(cache_key, serial.data, timeout=3000)
         return Response(serial.data, status=status.HTTP_200_OK)
 
 
@@ -195,13 +206,26 @@ class ATSResumeCreationAPI(APIView):
                 {'message': 'The ATS score is already 80 or above. No new resume creation required.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        task = atsfriendlyresumecreationtask.delay(scanid=scan_data.id, userid=request.user.id)
+        creation = ResumeCreation.objects.create(
+            profile=scan_data.resume.profile,
+            scan=scan_data,
+            generated_resume=None
+        )
+        task = atsfriendlyresumecreationtask.delay(creationid=creation.id)
         return Response(
             {
                 'message': 'The resume generation task has started and will be saved shortly.',
-                'task_id': task.id
+                'task_id': task.id,
+                'creation': {
+                    'id': creation.id,
+                    'slug': creation.slug,
+                    'scan_slug': scan_data.slug,
+                    'ats_score': scan_data.ats_score,
+                    'generated_resume': None,
+                    'created_on': creation.created_on
+                }
             },
-            status=status.HTTP_202_ACCEPTED
+            status=status.HTTP_201_CREATED
         )
 
 

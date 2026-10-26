@@ -12,8 +12,8 @@ class ResumeSerializer(serializers.ModelSerializer):
 class ResumeListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Resume
-        fields = ['id', 'slug', 'resumepdf', 'created_on']
-        read_only_fields = ['id', 'slug', 'resumepdf', 'created_on']
+        fields = ['id', 'slug', 'resumepdf', 'resumedata', 'created_on']
+        read_only_fields = ['id', 'slug', 'resumepdf', 'resumedata', 'created_on']
 
 class ResumeScanSerializer(serializers.ModelSerializer):
     resume = ResumeSerializer(read_only=True)
@@ -42,5 +42,5 @@ class ResumeCreationListSerializer(serializers.ModelSerializer):
     ats_score = serializers.IntegerField(source='scan.ats_score', read_only=True)
     class Meta:
         model = ResumeCreation
-        fields = ['id', 'slug', 'scan_slug', 'ats_score', 'created_on']
+        fields = ['id', 'slug', 'scan_slug', 'ats_score', 'generated_resume', 'created_on']
         read_only_fields = fields
