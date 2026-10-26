@@ -480,8 +480,8 @@ This isn't a monolith that crumbles under load. Every layer is **independently s
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/adarsh-pathak-2006/Scribble-ATS.git
-cd Scribble-ATS
+git clone https://github.com/adarsh-pathak-2006/Scribble_ATS.git
+cd Scribble_ATS
 ```
 
 ### 2. Backend Setup
@@ -683,6 +683,6 @@ The AI prompts wrap user-provided content (resume text + job description) in `<c
 
 _If this project helped you land an interview, give it a ⭐_
 
-[![GitHub Stars](https://img.shields.io/github/stars/adarsh-pathak-2006/Scribble-ATS?style=for-the-badge&color=6366f1)](https://github.com/adarsh-pathak-2006/Scribble-ATS)
+[![GitHub Stars](https://img.shields.io/github/stars/adarsh-pathak-2006/Scribble_ATS?style=for-the-badge&color=6366f1)](https://github.com/adarsh-pathak-2006/Scribble_ATS)
 
 </div>
