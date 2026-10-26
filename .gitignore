@@ -6,6 +6,7 @@ __pycache__/
 # Databases
 *.sqlite3
 db.sqlite3
+media/
 
 # Local environment and secret files
 .env
