@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR / ".env", override=True)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -174,10 +174,16 @@ CELERY_RESULT_EXPIRES = 3600
 CELERY_TASK_ALWAYS_EAGER = os.getenv("CELERY_TASK_ALWAYS_EAGER", "False").lower() in ("true", "1")
 CELERY_TASK_EAGER_PROPAGATES = True
 
-# SSL support for Upstash Redis (rediss://)
-if REDIS_CELERY_URL.startswith("rediss://"):
+# SSL support for Redis: Only enable SSL parameters for endpoints using rediss://
+if CELERY_BROKER_URL.startswith("rediss://"):
     CELERY_BROKER_USE_SSL = {"ssl_cert_reqs": ssl.CERT_REQUIRED}
+else:
+    CELERY_BROKER_USE_SSL = None
+
+if CELERY_RESULT_BACKEND.startswith("rediss://"):
     CELERY_REDIS_BACKEND_USE_SSL = {"ssl_cert_reqs": ssl.CERT_REQUIRED}
+else:
+    CELERY_REDIS_BACKEND_USE_SSL = None
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
