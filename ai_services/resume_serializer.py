@@ -2,70 +2,71 @@ from rest_framework import serializers
 
 
 class PersonalInfoSerializer(serializers.Serializer):
-    name = serializers.CharField()
-    email = serializers.CharField()
-    phone = serializers.CharField()
-    location = serializers.CharField()
-    linkedin = serializers.CharField()
-    github = serializers.CharField()
+    name = serializers.CharField(required=False, allow_blank=True, default='')
+    email = serializers.CharField(required=False, allow_blank=True, default='')
+    phone = serializers.CharField(required=False, allow_blank=True, default='')
+    location = serializers.CharField(required=False, allow_blank=True, default='')
+    linkedin = serializers.CharField(required=False, allow_blank=True, default='')
+    github = serializers.CharField(required=False, allow_blank=True, default='')
 
 
 class SkillsSerializer(serializers.Serializer):
     programming = serializers.ListField(
-        child=serializers.CharField()
+        child=serializers.CharField(allow_blank=True), required=False, default=list
     )
     backend = serializers.ListField(
-        child=serializers.CharField()
+        child=serializers.CharField(allow_blank=True), required=False, default=list
     )
     databases = serializers.ListField(
-        child=serializers.CharField()
+        child=serializers.CharField(allow_blank=True), required=False, default=list
     )
     tools = serializers.ListField(
-        child=serializers.CharField()
+        child=serializers.CharField(allow_blank=True), required=False, default=list
     )
     other = serializers.ListField(
-        child=serializers.CharField()
+        child=serializers.CharField(allow_blank=True), required=False, default=list
     )
 
 
 class ExperienceSerializer(serializers.Serializer):
-    role = serializers.CharField()
-    company = serializers.CharField()
-    start_date = serializers.CharField()
-    end_date = serializers.CharField()
+    role = serializers.CharField(required=False, allow_blank=True, default='')
+    company = serializers.CharField(required=False, allow_blank=True, default='')
+    start_date = serializers.CharField(required=False, allow_blank=True, default='')
+    end_date = serializers.CharField(required=False, allow_blank=True, default='')
     bullets = serializers.ListField(
-        child=serializers.CharField()
+        child=serializers.CharField(allow_blank=True), required=False, default=list
     )
 
 
 class ProjectSerializer(serializers.Serializer):
-    name = serializers.CharField()
+    name = serializers.CharField(required=False, allow_blank=True, default='')
     technologies = serializers.ListField(
-        child=serializers.CharField()
+        child=serializers.CharField(allow_blank=True), required=False, default=list
     )
     bullets = serializers.ListField(
-        child=serializers.CharField()
+        child=serializers.CharField(allow_blank=True), required=False, default=list
     )
-    url = serializers.CharField()
+    url = serializers.CharField(required=False, allow_blank=True, default='')
 
 
 class EducationSerializer(serializers.Serializer):
-    degree = serializers.CharField()
-    institution = serializers.CharField()
-    start_date = serializers.CharField()
-    end_date = serializers.CharField()
+    degree = serializers.CharField(required=False, allow_blank=True, default='')
+    institution = serializers.CharField(required=False, allow_blank=True, default='')
+    start_date = serializers.CharField(required=False, allow_blank=True, default='')
+    end_date = serializers.CharField(required=False, allow_blank=True, default='')
     details = serializers.ListField(
-        child=serializers.CharField()
+        child=serializers.CharField(allow_blank=True), required=False, default=list
     )
 
 
 class ResumeSerializer(serializers.Serializer):
-    personal_info = PersonalInfoSerializer()
-    summary = serializers.CharField()
-    skills = SkillsSerializer()
-    experience = ExperienceSerializer(many=True)
-    projects = ProjectSerializer(many=True)
-    education = EducationSerializer(many=True)
+    personal_info = PersonalInfoSerializer(required=False, default=dict)
+    summary = serializers.CharField(required=False, allow_blank=True, default='')
+    skills = SkillsSerializer(required=False, default=dict)
+    experience = ExperienceSerializer(many=True, required=False, default=list)
+    projects = ProjectSerializer(many=True, required=False, default=list)
+    education = EducationSerializer(many=True, required=False, default=list)
     certifications = serializers.ListField(
-        child=serializers.CharField()
+        child=serializers.CharField(allow_blank=True), required=False, default=list
     )
+
